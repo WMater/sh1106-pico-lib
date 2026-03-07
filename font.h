@@ -1,7 +1,7 @@
 #ifndef FONT_H
 #define FONT_H
 
-#include "triv_oled.h"
+#include <stdint.h>
 
 #define OFFSET 32
 
