@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "font.h"
 
 const uint8_t ascii[95][5] = {
