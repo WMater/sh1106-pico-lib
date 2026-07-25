@@ -93,7 +93,7 @@ void draw_pixel(int x, int y, uint8_t *buff){
 }
 
 
-void draw_circle(int x, int y, int radius, uint8_t *buff){ //bresenhama for circle
+void draw_circle(int x, int y, int radius, uint8_t *buff){ //midpoint for circle
     
     int xi = 0;
     int yi = radius;
@@ -127,74 +127,61 @@ void draw_circle(int x, int y, int radius, uint8_t *buff){ //bresenhama for circ
     }
 }
 
+static inline void bresenhamA(int x0, int y0, int x1, int y1, uint8_t *buff){
 
-void draw_line(int x0, int y0, int xk, int yk, uint8_t *buff){//bersenham for line
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int d = 2*dy - dx;
 
-    int xi = 0, yi = 0; //step counter setup
-    int dx = xk - x0, dy = y0 - yk; //delta setup
+    int xstep = x0 < x1 ? 1 : -1;
+    int ystep = y0 < y1 ? 1 : -1;
 
-    //steps setup
-    int8_t step_x = xk >= x0 ? 1 : -1; 
-    int8_t step_y = yk >= y0 ? 1 : -1;
+    int x = x0, y = y0;
+    while(x != x1 + xstep){
 
-    int d;
-
-    //helper pointers setup
-    //in my approach to distinguising a main axis
-    //data is stored in helers so i can mirror solution for x and y
-    int *main_axis, *secondary_axis;
-
-    int main_axis_d, secondary_axis_d;
-
-    int8_t main_axis_step, secondary_axis_step;
-
-    //case setup
-    if(abs(dy) <= abs(dx)){
-
-        d = abs(dx);
-
-        main_axis = &xi;
-        secondary_axis = &yi;
-
-        main_axis_d = abs(dx);
-        
-        secondary_axis_d = -abs(dy);
-
-        main_axis_step = step_x;
-        secondary_axis_step = step_y;
-    }else{
-
-        d = abs(dy);
-
-        main_axis = &yi;
-        secondary_axis = &xi;
-
-        main_axis_d = abs(dy);
-        secondary_axis_d = -abs(dx);
-
-        main_axis_step = step_y;
-        secondary_axis_step = step_x;
-    }
-
-    int lim_x = abs(dx), lim_y = abs(dy);
-
-    //loop
-    while(abs(xi) <= lim_x && abs(yi) <= lim_y){
-
-        draw_pixel(x0+xi, y0+yi, buff);
+        draw_pixel(x, y, buff);
+        d += 2*dy;
 
         if(d >= 0){
-            
-            d += 2*secondary_axis_d;
-        }else{
-            
-            d += 2*(secondary_axis_d + main_axis_d);
-            (*secondary_axis) += secondary_axis_step;
+            y += ystep;
+            d -= 2*dx;
         }
+        x += xstep;
+    }
 
-        (*main_axis) += main_axis_step;
+}
+
+static inline void bresenhamB(int x0, int y0, int x1, int y1, uint8_t *buff){
+
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int d = 2*dx - dy;
+
+    int xstep = x0 < x1 ? 1 : -1;
+    int ystep = y0 < y1 ? 1 : -1;
+
+    int x = x0, y = y0;
+    while(y != y1 + ystep){
+
+        draw_pixel(x, y, buff);
+        d += 2*dx;
+
+        if(d >= 0){
+            x += xstep;
+            d -= 2*dy;
+        }
+        y += ystep;
     }
 }
+
+void draw_line(int x0, int y0, int x1, int y1, uint8_t *buff){
+    if(abs(y1 - y0) < abs(x1-x0)){
+        bresenhamA(x0, y0, x1, y1, buff);
+    }else{
+        bresenhamB(x0, y0, x1, y1, buff);
+    }
+}
+
 
 void draw_letter(int x0, int y0, uint8_t* buff, char letter){
 
