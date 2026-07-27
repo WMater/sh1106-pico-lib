@@ -127,58 +127,30 @@ void draw_circle(int x, int y, int radius, uint8_t *buff){ //midpoint for circle
     }
 }
 
-static inline void bresenhamA(int x0, int y0, int x1, int y1, uint8_t *buff){
-
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-    int d = 2*dy - dx;
-
-    int xstep = x0 < x1 ? 1 : -1;
-    int ystep = y0 < y1 ? 1 : -1;
-
-    int x = x0, y = y0;
-    while(x != x1 + xstep){
-
-        draw_pixel(x, y, buff);
-        d += 2*dy;
-
-        if(d >= 0){
-            y += ystep;
-            d -= 2*dx;
-        }
-        x += xstep;
-    }
-
-}
-
-static inline void bresenhamB(int x0, int y0, int x1, int y1, uint8_t *buff){
-
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-    int d = 2*dx - dy;
-
-    int xstep = x0 < x1 ? 1 : -1;
-    int ystep = y0 < y1 ? 1 : -1;
-
-    int x = x0, y = y0;
-    while(y != y1 + ystep){
-
-        draw_pixel(x, y, buff);
-        d += 2*dx;
-
-        if(d >= 0){
-            x += xstep;
-            d -= 2*dy;
-        }
-        y += ystep;
-    }
-}
-
 void draw_line(int x0, int y0, int x1, int y1, uint8_t *buff){
-    if(abs(y1 - y0) < abs(x1-x0)){
-        bresenhamA(x0, y0, x1, y1, buff);
-    }else{
-        bresenhamB(x0, y0, x1, y1, buff);
+    int dx = abs(x1 - x0);
+    int dy = -abs(y1 - y0);
+
+    int xstep = x0 < x1 ? 1 : -1;
+    int ystep = y0 < y1 ? 1 : -1;
+
+    int d = dx + dy;
+
+    int x = x0;
+    int y = y0;
+    while(!(x == x1 && y == y1)){
+        
+        draw_pixel(x, y, buff);
+
+        int d2 = 2*d;
+        if(d2 >= dy){
+            d += dy;
+            x += xstep;
+        }
+        if(d2 <= dx){
+            d += dx;
+            y += ystep;
+        }
     }
 }
 
