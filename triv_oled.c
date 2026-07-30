@@ -128,6 +128,9 @@ void draw_circle(int x, int y, int radius, uint8_t *buff){ //midpoint for circle
 }
 
 void draw_line(int x0, int y0, int x1, int y1, uint8_t *buff){
+    if((unsigned int)x0 >= DISPLAY_WIDTH || (unsigned int)y0 >= DISPLAY_HEIGHT 
+    || (unsigned int)x1 >= DISPLAY_WIDTH || (unsigned int)y1 >= DISPLAY_HEIGHT) return;
+
     int dx = abs(x1 - x0);
     int dy = -abs(y1 - y0);
 
@@ -152,6 +155,7 @@ void draw_line(int x0, int y0, int x1, int y1, uint8_t *buff){
             y += ystep;
         }
     }
+    draw_pixel(x, y, buff);
 }
 
 
@@ -161,20 +165,20 @@ void draw_letter(int x0, int y0, uint8_t* buff, char letter){
 
     int8_t top_page, bot_page;
 
-    bot_page = y0 >> 3;
-    top_page = bot_page + 1;
+    top_page = y0 / 8;
+    bot_page = top_page - 1;
 
     if(bot_page >= 0 && top_page <= 7 && x0 >= 0 && x0 <= DISPLAY_WIDTH - 5){
 
         for(int i = 0; i < 5; i++){
 
-            *(buff + DISPLAY_WIDTH*bot_page + x0 + i) |= ascii[letter - OFFSET][i] << shift;
-            *(buff + DISPLAY_WIDTH*top_page + x0 + i) |= ascii[letter - OFFSET][i] >> 8-shift;
+            *(buff + (DISPLAY_WIDTH*bot_page) + x0 + i) |= ascii[letter - OFFSET][i] << shift;
+            *(buff + (DISPLAY_WIDTH*top_page) + x0 + i) |= ascii[letter - OFFSET][i] >> (8-shift);
         }
     }
 }
 
-void draw_bitmap(SECTOR sector, const BITMAP bitmap, uint8_t* buff){
+void draw_bitmap_old(SECTOR sector, const BITMAP bitmap, uint8_t* buff){
     //!bitmap is draw with up to page resolution
     //if not matched to sector it will overflow bottom boundries till next page
     //cursor is set to the bottom line tho to not break convention
@@ -230,6 +234,41 @@ void draw_bitmap(SECTOR sector, const BITMAP bitmap, uint8_t* buff){
         
         //index corigation
         bitmap_index -= incr_offset;
+    }
+}
+
+void draw_bitmap(SECTOR sector, const BITMAP bitmap, uint8_t *buff){
+
+    if(sector.height != bitmap.bitmap_height || sector.width != bitmap.bitmap_width) return;
+    int8_t top_page = sector.y0 / 8;
+    int8_t bot_page = (sector.y0 - sector.height + 1) / 8;
+
+    if(top_page >= 8 || bot_page < 0) return;
+
+    int shift = 8 - (sector.y0 % 8);
+
+    int total_height;
+    int diff = bitmap.bitmap_height % 8;
+    if(diff == 0){
+        total_height = bitmap.bitmap_height;
+    }else{
+        total_height = bitmap.bitmap_height + (8-diff);
+    }
+    int bitmap_length = (total_height * bitmap.bitmap_width) / 8; 
+
+    int page = top_page;
+    int x = sector.x0;
+    for(int i = 0; i < bitmap_length; i++){
+
+        *(buff + (page*DISPLAY_WIDTH) + x) |= (*(bitmap.bitmap + i) >> shift);
+        
+        if(page == bot_page){
+            x++;
+            page = top_page;
+        }else{
+            *(buff + ((page-1)*DISPLAY_WIDTH) + x) |= (*(bitmap.bitmap + i) << (8-shift));
+            page--;
+        }
     }
 }
 
