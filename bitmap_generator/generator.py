@@ -12,18 +12,20 @@ def gen_bitmap(image, name):
     for i in range(size[0]):
     
         for j in range(size[1]):
+
+            if count == 8:
+                count = 0
+                output.append(", 0b")
+
             if bitmap[i, j] == 0:
                 output.append("0")
             else:
                 output.append("1")
 
             count += 1
-            if count == 8:
-                count = 0
-                output.append(", 0b")
 
         if i == size[0] - 1:
-
+            
             pad = "0" * (8-count)
             output.append(pad)
             break
@@ -70,7 +72,7 @@ def main():
         output_dir = os.path.join(curr_dir, "output")
 
     files = os.listdir(curr_dir)
-    output_file = open(os.path.join(output_dir, "bitmap.h"), "w")
+    output_file = open(os.path.join(output_dir, "bitmap.txt"), "w")
     output_file.write("//custom bitmaps genereted using python script\n\n")
     output_file.write("#ifndef BITMAP_H\n\n#define BITMAP_H\n\n\n")
     for file in files:
