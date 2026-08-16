@@ -1,7 +1,7 @@
 from PIL import Image, ImageOps
 import os
 
-def gen_bitmap(image, name):
+def get_bits(image, name):
 
     size = image.size
     bitmap = image.load()
@@ -30,17 +30,10 @@ def gen_bitmap(image, name):
             output.append(pad)
             break
 
-        if count == 0:
+        pad = "0" * (8 - count)
+        output.append(pad + ",\n0b")
+        count = 0
 
-            output.append(",\n0b")
-        else:
-
-            pad = "0" * (8 - count)
-            output.append(pad + ",\n0b")
-            count = 0
-
-    
-    
     output.append("\n};")
     output.append("\n\nBITMAP bitmap_"+name+" = {" + str(size[1]) + ", " + str(size[0]) + ", " + name + "};")
     return "".join(output)
@@ -48,36 +41,18 @@ def gen_bitmap(image, name):
 
 def main():
     curr_dir = os.getcwd()
-    output_dir = ""
 
-    try:
-
-        print("made output directory")
-        os.makedirs(os.path.join(curr_dir, "output"))
-
-    except FileExistsError:
-
-        print("directory exists already")
-        files = os.listdir(os.path.join(curr_dir, "output"))
-
-        if files:
-
-            print("performing vipe...")
-            for file in files:
-                os.remove(os.path.join(curr_dir, "output", file))
-            print("vipe finished")
-
-    finally:
-
-        output_dir = os.path.join(curr_dir, "output")
+    output_dir = os.path.join(curr_dir, "output")
+    os.makedirs(output_dir, exist_ok=True)
 
     files = os.listdir(curr_dir)
-    output_file = open(os.path.join(output_dir, "bitmap.txt"), "w")
+    output_file = open(os.path.join(output_dir, "bitmap.h"), "w")
     output_file.write("//custom bitmaps genereted using python script\n\n")
     output_file.write("#ifndef BITMAP_H\n\n#define BITMAP_H\n\n\n")
+
     for file in files:
 
-        if file.endswith(".png") or file.endswith(".jpg"):
+        if file.lower().endswith((".png", ".jpg", ".jpeg", ".bmp")):
 
             try:
                 image = Image.open(file)
@@ -89,12 +64,12 @@ def main():
                 print("unable to open file:", file, "file corrupted")
                 continue
 
-            except:
-                print("something went wrong with:", file)
+            except Exception as excpt:
+                print("something went wrong with:", file, excpt)
                 continue
 
-            out = gen_bitmap(image, file[:-len(os.path.splitext(file)[1])])
-            output_file.write(out+"\n\n")
+            bits = get_bits(image, file[:-len(os.path.splitext(file)[1])])
+            output_file.write(bits+"\n\n")
             print("converted:", file)
     print("task finished!")
     output_file.write("#endif")
