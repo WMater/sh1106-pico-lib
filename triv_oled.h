@@ -28,12 +28,15 @@
 
 typedef struct{
     i2c_inst_t *i2c;
-    const uint8_t addr;
+    uint8_t addr;
+    uint8_t* buff;
 }DISPLAY;
 
 typedef struct{
     unsigned int x0;
     unsigned int y0;
+    //unsigned int x1;
+    //unsigned int y1;
     unsigned int height;
     unsigned int width;
 }SECTOR;
@@ -44,16 +47,19 @@ typedef struct{
     const uint8_t *bitmap;
 }BITMAP;
 
+void init_display_struct(DISPLAY* display, i2c_inst_t* i2c, uint8_t addr, uint8_t* buff);
+
+void init_sector_struct(SECTOR* sector, int x0, int y0, int height, int width);
 
 void cmd(uint8_t cmd, DISPLAY* display);
 
-void write(uint8_t *buff, DISPLAY* display);
+void write_screen(DISPLAY* display);
 
-void write_sector(SECTOR sector, uint8_t* buff, DISPLAY* display);
+void write_sector(SECTOR sector, DISPLAY* display);
 
-void clear(uint8_t *buff);
+void clear_buff(DISPLAY* display);
 
-void init_display(uint8_t *buff, DISPLAY* display);
+void init_display(DISPLAY* display);
 
 void draw_pixel(int x, int y, uint8_t *buff);
 
@@ -70,6 +76,8 @@ SECTOR draw_text(int x0, int y0, char* string, int len, uint8_t* buff);
 SECTOR draw_int(int x0, int y0, int integer, uint8_t* buff);
 
 void clear_sector(SECTOR sector, uint8_t* buff);
+
+void draw_bitmap_old(SECTOR sector, const BITMAP bitmap, uint8_t* buff);
 
 
 #endif
