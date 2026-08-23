@@ -13,6 +13,7 @@
 
 #define DISPLAY_WIDTH 132
 #define DISPLAY_HEIGHT 64
+#define ST_LINE 2
 
 #define SET_PAGE 0xB0
 #define SET_COL_W_REV 0xA1
@@ -25,6 +26,17 @@
 #define SCREEN_ON 0xAF
 #define SCREEN_OFF 0xAE
 
+typedef enum{
+    OLED_OK,
+    //warnings
+    OLED_WAR_PIXEL_OUT_OF_BOUND,
+    OLED_WAR_LINE_OUT_OF_BOUND,
+    OLED_WAR_CIRCLE_OUT_OF_BOUND,
+    //errors
+    OLED_ERR_SECTOR_INIT_FAILED,
+    OLED_ERR_BITMAP_NFIT,
+    OLED_ERR_TEXT_OUT_OF_BOUND
+}OledStatus_t;
 
 typedef struct{
     i2c_inst_t *i2c;
@@ -35,8 +47,8 @@ typedef struct{
 typedef struct{
     unsigned int x0;
     unsigned int y0;
-    //unsigned int x1;
-    //unsigned int y1;
+    unsigned int x1;
+    unsigned int y1;
     unsigned int height;
     unsigned int width;
 }SECTOR;
@@ -61,23 +73,20 @@ void clear_buff(DISPLAY* display);
 
 void init_display(DISPLAY* display);
 
-void draw_pixel(int x, int y, uint8_t *buff);
+void draw_pixel(int x, int y, DISPLAY* display);
 
-void draw_circle(int x, int y, int radius, uint8_t *buff);
+void draw_circle(int x, int y, int radius, DISPLAY* display);
 
-void draw_line(int x0, int y0, int xk, int yk, uint8_t *buff);
+void draw_line(int x0, int y0, int x1, int y1, DISPLAY* display);
 
-void draw_letter(int x0, int y0, uint8_t* buff, char letter);
+void draw_letter(int x0, int y0, char letter, DISPLAY* display);
 
-void draw_bitmap(SECTOR sector, const BITMAP bitmap, uint8_t* buff);
+void draw_bitmap(SECTOR sector, const BITMAP bitmap, DISPLAY* display);
 
-SECTOR draw_text(int x0, int y0, char* string, int len, uint8_t* buff);
+SECTOR draw_text(int x0, int y0, char* string, int len, DISPLAY* display);
 
-SECTOR draw_int(int x0, int y0, int integer, uint8_t* buff);
+SECTOR draw_int(int x0, int y0, int integer, DISPLAY* display);
 
-void clear_sector(SECTOR sector, uint8_t* buff);
-
-void draw_bitmap_old(SECTOR sector, const BITMAP bitmap, uint8_t* buff);
-
+void clear_sector(SECTOR sector, DISPLAY* display);
 
 #endif
